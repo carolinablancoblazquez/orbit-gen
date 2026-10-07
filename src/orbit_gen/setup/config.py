@@ -68,7 +68,7 @@ class RunConfig:
     ic: OrbitIC
     continuation: ContinuationConfig = field(default_factory=ContinuationConfig)
     output_dir: Path = PROJECT_ROOT.parent.parent / "results"
-    show_plots: bool = True
+    show_plots: bool = False
     kernel_paths: dict[str, Path] = field(
         init=False, default_factory=ensure_kernels, repr=False
     )
@@ -110,5 +110,5 @@ class RunConfig:
             continuation=continuation,
             output_dir=PROJECT_ROOT.parent.parent
             / Path(data.get("output_dir", "results")),
-            show_plots=data.get("show_plots", True),
+            show_plots=data.get("show_plots", False),
         )

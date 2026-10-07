@@ -1,6 +1,5 @@
 import numpy as np
 import spiceypy as spice
-from matplotlib import pyplot as plt
 from scipy.optimize import fsolve
 import astropy.units as u
 
@@ -257,11 +256,17 @@ class Family:
         typically in canonical CR3BP coordinates. Each orbit is plotted in the same
         figure for qualitative comparison of geometry across the continuation family.
 
-        Args:
-            show (bool):
-                If True, displays the figure via matplotlib.pyplot.show().
-                If False, the figure is created but not rendered interactively.
+        Raises:
+            ImportError:
+                If matplotlib is not installed (the `plotting` extra).
         """
+
+        try:
+            from matplotlib import pyplot as plt
+        except ModuleNotFoundError as e:
+            raise ImportError(
+                'Plotting requires matplotlib: pip install "orbit-gen[plotting]"'
+            ) from e
 
         fig = plt.figure()
         ax = fig.add_subplot(projection="3d")
@@ -272,8 +277,6 @@ class Family:
         ax.set_title(f"{self.cfg.ic.name} family — {len(self.orbits)} orbits")
 
         plt.show()
-
-        return ax
 
     def save(self):
         """Save all orbit ICs, periods, and mu_star to cfg.output_path."""

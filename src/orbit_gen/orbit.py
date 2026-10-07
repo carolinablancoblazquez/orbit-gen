@@ -1,5 +1,4 @@
 import numpy as np
-from matplotlib import pyplot as plt
 
 from orbit_gen.utils import eom, units
 from orbit_gen.setup.system_config import CanonicalUnits
@@ -80,7 +79,7 @@ class Orbit:
         stored state history.
 
         Args:
-            ax (matplotlib.axes._subplots.Axes3DSubplot, optional):
+            ax (mpl_toolkits.mplot3d.Axes3D, optional):
                 Existing 3D axes object. If None, a new figure and 3D axes are
                 created internally.
             **kwargs:
@@ -88,9 +87,20 @@ class Orbit:
                 controlling styling (e.g., color, linewidth, alpha).
 
         Returns:
-            ax (matplotlib.axes._subplots.Axes3DSubplot):
+            ax (mpl_toolkits.mplot3d.Axes3D):
                 The matplotlib 3D axes containing the plotted orbit.
+
+        Raises:
+            ImportError:
+                If matplotlib is not installed (the `plotting` extra).
         """
+
+        try:
+            from matplotlib import pyplot as plt
+        except ModuleNotFoundError as e:
+            raise ImportError(
+                'Plotting requires matplotlib: pip install "orbit-gen[plotting]"'
+            ) from e
 
         if self.states is None:
             self.propagate()

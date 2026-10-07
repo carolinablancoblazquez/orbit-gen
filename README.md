@@ -14,6 +14,13 @@ It currently supports various families in the Earth-Moon and Sun-Earth systems.
 ```bash
 pip install orbit-gen
 ```
+
+Or to install with plotting dependencies
+
+```bash
+pip install "orbit-gen[plotting]"
+```
+
 Requires Python 3.11+.
 
 ## Usage
@@ -32,7 +39,7 @@ max_solutions: 20               # Maximum number of orbits to generate
 max_period_days: 1000.0         # Maximum full orbit period in days
 
 output_dir: results
-show_plots: true                # Optional; for user use only
+show_plots: false               # Optional; for user use only
 ```
 
 ```python
@@ -102,15 +109,21 @@ to install the package in editable mode plus dev dependencies. Run the test suit
 uv run pytest
 ```
 
+Optionally if plotting capabilities are desired, run
+
+```bash
+uv sync --extra plotting
+```
+
 The repo includes a driver script, `scripts/crtbpModel.py`,
 which reads `orbit_config.yaml` from the project root, runs continuation,
-saves results, and shows plots.
+saves results, and shows plots if `show_plots: true` and the `plotting` optional dependencies are installed.
 
 An example configuration file (`orbit_config.example.yaml`), is included in the repository, and `orbit_config.yaml` can be created and used by running:
 
 ```bash
 cp orbit_config.example.yaml orbit_config.yaml   # edit as needed
-uv run python scripts/crtbpModel.py
+uv run scripts/crtbpModel.py
 ```
 
 ## License
