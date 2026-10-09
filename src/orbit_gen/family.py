@@ -274,12 +274,14 @@ class Family:
                 'Plotting requires matplotlib: pip install "orbit-gen[plotting]"'
             ) from e
 
+        # test comment 2
         fig = plt.figure()
         ax = fig.add_subplot(projection="3d")
 
         for orbit in self.orbits:
             orbit.plot(ax=ax)
 
+        # test comment
         ax.set_title(f"{self.cfg.ic.name} family — {len(self.orbits)} orbits")
 
         plt.show()
