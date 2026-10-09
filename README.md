@@ -129,6 +129,12 @@ cp orbit_config.example.yaml orbit_config.yaml   # edit as needed
 uv run scripts/crtbpModel.py
 ```
 
+A second script, `scripts/animate_family.py`, animates the family saved for the current `orbit_config.yaml` and writes a rotating GIF to `animations/`. It requires the `plotting` optional dependencies and a saved family, so `scripts/crtbpModel.py` must be run first. Settings such as frame rate and resolution can be changed at the top of the script.
+
+```bash
+uv run scripts/animate_family.py
+```
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
