@@ -61,6 +61,8 @@ class RunConfig:
             analysis
         system (SystemConfig):
             CR3BP system used
+        verbose (bool):
+            Prints progress messages during continuation when true
 
     """
 
@@ -69,6 +71,7 @@ class RunConfig:
     continuation: ContinuationConfig = field(default_factory=ContinuationConfig)
     output_dir: Path = PROJECT_ROOT.parent.parent / "results"
     show_plots: bool = False
+    verbose: bool = True
     kernel_paths: dict[str, Path] = field(
         init=False, default_factory=ensure_kernels, repr=False
     )
@@ -111,4 +114,5 @@ class RunConfig:
             output_dir=PROJECT_ROOT.parent.parent
             / Path(data.get("output_dir", "results")),
             show_plots=data.get("show_plots", False),
+            verbose=data.get("verbose", True),
         )

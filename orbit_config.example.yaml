@@ -19,3 +19,4 @@ max_period_days: 1000.0
 # Output
 output_dir: results
 show_plots: false
+verbose: true

@@ -34,13 +34,16 @@ preset: SE_L2_Northern_Halo
 
 max_iter: 1000                  # Maximum Newton iterations for a single differential correct attempt
 eps: 1.0e-6                     # Differential-correction convergence tolerance on residual norm
-step: 0.01                      # Pseudo-arclength continuation step size in canonical units
+step: 0.01                      # Pseudo-arclength step size
 max_solutions: 20               # Maximum number of orbits to generate
 max_period_days: 1000.0         # Maximum full orbit period in days
 
 output_dir: results
 show_plots: false               # Optional; for user use only
+verbose: true                   # Print progress messages (warnings always show)
 ```
+
+> **Note:** `step` is the distance moved along the family's tangent direction at each step. Its sign sets the initial direction: a positive value results in an initially increasing period, a negative value results in an initially decreasing period.
 
 ```python
 from orbit_gen import Family, RunConfig

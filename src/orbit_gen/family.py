@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 import spiceypy as spice
 from scipy.optimize import fsolve
@@ -73,22 +74,23 @@ class Family:
 
         # Free variables: [x0, z0, vy0, T/2]
         X = self.cfg.ic.as_list
-        z = np.array([0.0, 0.0, 0.0, -1.0])
+        z = np.array([0.0, 0.0, 0.0, 1.0])
 
         while X[-1] * 2 < Tp_lim and len(self.orbits) < cont.max_solutions:
             X, error = self._correct_orbit(X, stm_identity)
 
             if X[-1] < 0:
-                print("Negative period.")
+                warnings.warn("Negative period.")
                 break
             if error > cont.eps:
-                print("Corrector did not converge.")
+                warnings.warn("Corrector did not converge.")
                 break
 
-            period_days = units.time_to_dimensional(
-                2 * X[-1], self.cfg.system.canonical_units
-            ).to_value(u.day)
-            print(f"Period: {period_days:.4f} days")
+            if self.cfg.verbose:
+                period_days = units.time_to_dimensional(
+                    2 * X[-1], self.cfg.system.canonical_units
+                ).to_value(u.day)
+                print(f"Period: {period_days:.4f} days")
 
             states, times, valid = self._propagate_and_validate(X)
 
@@ -110,7 +112,8 @@ class Family:
             if not success:
                 break
 
-            print(f"Orbits found: {len(self.orbits)}\n")
+            if self.cfg.verbose:
+                print(f"Orbits found: {len(self.orbits)}\n")
 
         if not self.orbits:
             raise RuntimeError("Continuation failed")
@@ -150,9 +153,11 @@ class Family:
             dFx = eom.jacobian(X, self.mu_star, state_half_T, Phi)
             X = X - 0.3 * dFx.T @ (np.linalg.inv(dFx @ dFx.T) @ Fx)
 
-            print(
-                f"  iter {i+1:2d} | error = {error:.3e} | cond = {np.linalg.cond(dFx @ dFx.T):.2e}"
-            )
+            if self.cfg.verbose:
+                print(
+                    f"  iter {i+1:2d} | error = {error:.3e} | "
+                    f"cond = {np.linalg.cond(dFx @ dFx.T):.2e}"
+                )
 
         return X, error
 
@@ -186,13 +191,14 @@ class Family:
         positions = states[:, 0:3]
         r_mag = np.linalg.norm(positions, axis=1)
 
-        periapsis_km = units.pos_to_dimensional(
-            min(r_mag), self.cfg.system.canonical_units
-        ).to_value(u.km)
-        print(f"  Periapsis: {periapsis_km:.2f} km")
+        if self.cfg.verbose:
+            periapsis_km = units.pos_to_dimensional(
+                min(r_mag), self.cfg.system.canonical_units
+            ).to_value(u.km)
+            print(f"  Periapsis: {periapsis_km:.2f} km")
 
         valid = not np.any(r_mag < self.r_secondary)
-        if not valid:
+        if not valid and self.cfg.verbose:
             print("  Intersects secondary — discarding.")
 
         return states, times, valid
@@ -242,11 +248,11 @@ class Family:
         J = Q.T @ R
 
         try:
-            z_new = np.linalg.inv(J) @ z
+            z_new = np.linalg.inv(J) @ [0.0, 0.0, 0.0, 1.0]
             z_new = z_new / np.linalg.norm(z_new)
             return X_new, z_new, True
         except np.linalg.LinAlgError:
-            print("Singular Jacobian — stopping continuation.")
+            warnings.warn("Singular Jacobian — stopping continuation.")
             return X_new, z, False
 
     def plot(self):
@@ -291,6 +297,7 @@ class Family:
             periods=periods,
             mu_star=self.mu_star,
         )
+
         print(f"Saved {len(self.orbits)} orbits to {self.cfg.output_path}")
 
     def __repr__(self):

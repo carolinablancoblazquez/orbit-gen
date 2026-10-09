@@ -16,6 +16,7 @@ def _make_family(mu_star, cu, r_secondary=0.004519771071800208):
         continuation=SimpleNamespace(max_iter=50, eps=1e-10, step=0.01),
         system=SimpleNamespace(canonical_units=cu, name="Earth-Moon"),
         ic=SimpleNamespace(name="halo"),
+        verbose=True,
     )
     return fam
 
