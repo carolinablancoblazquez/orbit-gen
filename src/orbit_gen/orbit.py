@@ -113,6 +113,7 @@ class Orbit:
         ax.set_xlabel("X [DU]")
         ax.set_ylabel("Y [DU]")
         ax.set_zlabel("Z [DU]")
+        ax.set_aspect("equal", adjustable="datalim")
 
         return ax
 
