@@ -15,10 +15,10 @@ authors = [
 requires-python = ">=3.11"
 dependencies = [
     "astropy>=7.2.0",
-    "numpy>=2.4.6",
+    "numpy>=1.24",
     "platformdirs>=4.10.0",
     "pyyaml>=6.0.3",
-    "scipy>=1.17.1",
+    "scipy>=1.9.2",
     "spiceypy>=8.1.0",
 ]
 
@@ -38,5 +38,5 @@ Repository = "https://github.com/jmripic/orbit-gen"
 
 [project.optional-dependencies]
 plotting = [
-    "matplotlib>=3.11.2",
+    "matplotlib>=3.10",
 ]
