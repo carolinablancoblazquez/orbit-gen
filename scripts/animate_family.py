@@ -100,7 +100,7 @@ cu = canonical_units(cfg)
 if not cfg.output_path.exists():
     raise FileNotFoundError(
         f"Saved family at {cfg.output_path} does not exist. "
-        "Please run scripts/crtbpModel.py to create it."
+        "Please run scripts/generate_family.py to create it."
     )
 data = np.load(cfg.output_path)
 states = data["states"]

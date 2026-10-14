@@ -118,7 +118,7 @@ Optionally if plotting capabilities are desired, run
 uv sync --extra plotting
 ```
 
-The repo includes a driver script, `scripts/crtbpModel.py`,
+The repo includes a driver script, `scripts/generate_family.py`,
 which reads `orbit_config.yaml` from the project root, runs continuation,
 saves results, and shows plots if `show_plots: true` and the `plotting` optional dependencies are installed.
 
@@ -126,10 +126,10 @@ An example configuration file (`orbit_config.example.yaml`), is included in the 
 
 ```bash
 cp orbit_config.example.yaml orbit_config.yaml   # edit as needed
-uv run scripts/crtbpModel.py
+uv run scripts/generate_family.py
 ```
 
-A second script, `scripts/animate_family.py`, animates the family saved for the current `orbit_config.yaml` and writes a rotating GIF to `animations/`. It requires the `plotting` optional dependencies and a saved family, so `scripts/crtbpModel.py` must be run first. Settings such as frame rate and resolution can be changed at the top of the script.
+A second script, `scripts/animate_family.py`, animates the family saved for the current `orbit_config.yaml` and writes a rotating GIF to `animations/`. It requires the `plotting` optional dependencies and a saved family, so `scripts/generate_family.py` must be run first. Settings such as frame rate and resolution can be changed at the top of the script.
 
 ```bash
 uv run scripts/animate_family.py
