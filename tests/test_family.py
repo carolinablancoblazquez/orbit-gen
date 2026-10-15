@@ -37,7 +37,7 @@ def test_propagate_and_validate_no_intersection(mu_star, cu, ic):
 
 
 def test_propagate_and_validate_intersection(mu_star, cu, ic):
-    fam = _make_family(mu_star, cu, r_secondary=1.0)
+    fam = _make_family(mu_star, cu, r_secondary=0.5)
     _, _, valid = fam._propagate_and_validate(ic.tolist())
     assert valid is False
 
