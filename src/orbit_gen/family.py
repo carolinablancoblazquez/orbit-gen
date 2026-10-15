@@ -195,7 +195,7 @@ class Family:
             closest_km = units.pos_to_dimensional(
                 min(r_mag), self.cfg.system.canonical_units
             ).to_value(u.km)
-            print(f"  Closest distance to the secondary body: {closest_km:.2f} km")
+            print(f"  Closest approach to the secondary body: {closest_km:.2f} km")
 
         valid = not np.any(r_mag < self.r_secondary)
         if not valid and self.cfg.verbose:
