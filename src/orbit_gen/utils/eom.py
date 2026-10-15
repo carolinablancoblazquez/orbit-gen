@@ -1,6 +1,5 @@
 import numpy as np
 from scipy.integrate import solve_ivp
-from scipy.optimize import fsolve
 
 
 def crtbp_eom(t, w, mu_star):
