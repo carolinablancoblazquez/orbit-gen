@@ -189,7 +189,7 @@ class Family:
 
         states, times = eom.propagate(X_full, self.mu_star)
         positions = states[:, 0:3]
-        r_mag = np.linalg.norm(positions-(1-self.mu_star), axis=1)
+        r_mag = np.linalg.norm(positions-[1-self.mu_star,0,0], axis=1)
 
         if self.cfg.verbose:
             closest_km = units.pos_to_dimensional(
