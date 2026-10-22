@@ -235,7 +235,7 @@ def continuation_constraint(w, z, sol_predictor, mu_star):
 def jacobi_constant(pos, vel, mu_star):
     """Compute the Jacobi constant in the circular restricted three-body problem
 
-    Evaluates the Jacobi integral in the rotating frame for a given state. The
+    Evaluates the Jacobi constant in the rotating frame for a given state. The
     Jacobi constant is conserved along CR3BP trajectories and is commonly used
     as an invariant for validation and classification of orbits.
 
@@ -252,13 +252,15 @@ def jacobi_constant(pos, vel, mu_star):
             Value of the Jacobi constant for the given state.
     """
 
-    r_Mbary = np.array([1 - mu_star, 0, 0])
-    r_Ebary = np.array([-mu_star, 0, 0])
+    r_secondary = np.array([1 - mu_star, 0, 0])
+    r_primary = np.array([-mu_star, 0, 0])
 
-    KE = np.dot(vel, vel) / 2
-    U1 = -(pos[0] ** 2 + pos[1] ** 2) / 2
-    U2 = -(
-        (1 - mu_star) / np.linalg.norm(pos - r_Ebary)
-        + mu_star / np.linalg.norm(pos - r_Mbary)
+    omega = (
+        (pos[0] ** 2 + pos[1] ** 2) / 2
+        + (1 - mu_star) / np.linalg.norm(pos - r_primary)
+        + mu_star / np.linalg.norm(pos - r_secondary)
     )
-    return KE + U1 + U2
+
+    J = 2 * omega - np.dot(vel, vel)
+
+    return J
