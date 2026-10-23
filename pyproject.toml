@@ -12,7 +12,7 @@ license-files = ["LICENSE"]
 authors = [
     { name = "Jayden Ripic", email = "jmr595@cornell.edu" },
 ]
-keywords = ["CR3BP", "three-body problem", "periodic orbits", "astrodynamics"]
+keywords = ["Astrodynamics", "CR3BP", "Orbital Mechanics", "Periodic Orbits", "Three-Body Problem"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
