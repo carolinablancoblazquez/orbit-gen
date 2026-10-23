@@ -45,6 +45,8 @@ verbose: true                   # Print progress messages (warnings always show)
 
 > **Note:** `step` is the distance moved along the family's tangent direction at each step. Its sign sets the initial direction: a positive value results in an initially increasing period, a negative value results in an initially decreasing period.
 
+> **Note:** A relative `output_dir` is resolved from the folder containing the config file.
+
 ```python
 from orbit_gen import Family, RunConfig
 

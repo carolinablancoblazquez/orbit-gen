@@ -6,8 +6,6 @@ from .kernels import ensure_kernels
 from pathlib import Path
 import yaml
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-
 _SYSTEMS = {
     "EM": EM_SYSTEM,
     "SE": SE_SYSTEM,
@@ -69,7 +67,7 @@ class RunConfig:
     system: SystemConfig
     ic: OrbitIC
     continuation: ContinuationConfig = field(default_factory=ContinuationConfig)
-    output_dir: Path = PROJECT_ROOT.parent.parent / "results"
+    output_dir: Path = Path("results")
     show_plots: bool = False
     verbose: bool = True
     kernel_paths: dict[str, Path] = field(
@@ -85,7 +83,8 @@ class RunConfig:
         return self.output_dir / self.output_filename
 
     @classmethod
-    def from_yaml(cls, yaml_path: Path) -> "RunConfig":
+    def from_yaml(cls, yaml_path: str | Path) -> "RunConfig":
+        yaml_path = Path(yaml_path)
         with open(yaml_path) as yp:
             data = yaml.safe_load(yp)
 
@@ -111,8 +110,7 @@ class RunConfig:
             system=system,
             ic=ic,
             continuation=continuation,
-            output_dir=PROJECT_ROOT.parent.parent
-            / Path(data.get("output_dir", "results")),
+            output_dir=yaml_path.parent / data.get("output_dir", "results"),
             show_plots=data.get("show_plots", False),
             verbose=data.get("verbose", True),
         )
