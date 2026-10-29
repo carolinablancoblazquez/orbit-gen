@@ -285,17 +285,26 @@ class Family:
         plt.show()
 
     def save(self):
-        """Save all orbit ICs, periods, and mu_star to cfg.output_path."""
+        """Save all orbit ICs, periods, mu_star and Jacobi constants to cfg.output_path."""
         self.cfg.output_dir.mkdir(parents=True, exist_ok=True)
 
         states = np.array([o.states[0, :] for o in self.orbits])
         periods = np.array([o.period for o in self.orbits])
 
+        jacobi_constants = []
+
+        for state in states:
+            pos = state[0:3]
+            vel = state[3:6]
+            C = eom.jacobi_constant(pos, vel, self.mu_star)
+            jacobi_constants.append(C)
+        
         np.savez(
             self.cfg.output_path,
             states=states,
             periods=periods,
             mu_star=self.mu_star,
+            jacobi_constants=np.array(jacobi_constants),
         )
 
         print(f"Saved {len(self.orbits)} orbits to {self.cfg.output_path}")
