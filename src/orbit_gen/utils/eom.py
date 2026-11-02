@@ -2,7 +2,7 @@ import numpy as np
 from scipy.integrate import solve_ivp
 
 
-def crtbp_eom(t, w, mu_star):
+def cr3bp_eom(t, w, mu_star):
     """Equations of motion for the CR3BP in the rotating frame with optional STM propagation
 
     Computes the time derivative of the state in the circular restricted three-body problem
@@ -194,7 +194,7 @@ def jacobian(free_var, mu_star, state_half_T, Phi):
         ]
     )
 
-    dw = crtbp_eom(free_var[-1], state_half_T, mu_star)
+    dw = cr3bp_eom(free_var[-1], state_half_T, mu_star)
     ddT = np.array([dw[1], dw[3], dw[5]])
 
     dFx = np.zeros([3, 4])
