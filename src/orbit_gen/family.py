@@ -74,16 +74,34 @@ class Family:
 
         # Free variables: [x0, z0, vy0, T/2]
         X = self.cfg.ic.as_list
-        z = np.array([0.0, 0.0, 0.0, 1.0])
+        z = None
+        z0_first = None
 
-        while X[-1] * 2 < Tp_lim and len(self.orbits) < cont.max_solutions:
-            X, error = self._correct_orbit(X, stm_identity)
+        n_steps = 0
+        while X[-1] * 2 < Tp_lim and n_steps < cont.max_solutions:
+            n_steps += 1
+            X, error, stm_half_T = self._correct_orbit(X, stm_identity)
 
             if X[-1] < 0:
                 warnings.warn("Negative period.")
                 break
             if error > cont.eps:
                 warnings.warn("Corrector did not converge.")
+                break
+
+            if abs(X[1]) < 1e-9 and abs(X[2]) < 1e-9:
+                warnings.warn(
+                    "Collapsed to an equilibrium point — stopping continuation."
+                )
+                break
+
+            if z0_first is None:
+                z0_first = X[1]
+            if abs(z0_first) > 1e-6 and X[1] / z0_first < 1e-3:
+                warnings.warn(
+                    "Family reached a planar orbit (bifurcation) — "
+                    "stopping continuation."
+                )
                 break
 
             if self.cfg.verbose:
@@ -106,6 +124,8 @@ class Family:
                 # Store already-computed trajectory so propagate() isn't needed again
                 orbit.states = states
                 orbit.times = times
+                S = np.diag([1.0, -1.0, 1.0, -1.0, 1.0, -1.0])
+                orbit.monodromy = S @ np.linalg.inv(stm_half_T) @ S @ stm_half_T
                 self.orbits.append(orbit)
 
             X, z, success = self._continuation_step(X, z)
@@ -118,11 +138,15 @@ class Family:
         if not self.orbits:
             raise RuntimeError("Continuation failed")
 
-    def _correct_orbit(self, X: list, stm_identity: np.ndarray) -> tuple[list, float]:
+    def _correct_orbit(
+        self, X: list, stm_identity: np.ndarray
+    ) -> tuple[list, float, np.ndarray]:
         """Single-shooting differential corrector
 
         Newton-style differential correction using a single-shooting formulation
-        for periodic orbit boundary condition enforcement.
+        for periodic orbit boundary condition enforcement. Steps are damped by
+        0.3 while the residual is above 1e-4, where a full Newton step can
+        overshoot onto a different orbit, and taken in full below it.
 
         Args:
             X (array-like):
@@ -135,23 +159,39 @@ class Family:
             X (ndarray):
                 Corrected free-variable vector after convergence.
             error (float):
-                Final residual norm ||F(X)|| at termination.
+                Final residual norm ||F(X)|| at termination (inf if a
+                propagation failed or the residual is not finite).
+            stm_half_T (ndarray):
+                State transition matrix Phi(T/2, 0) at the returned X when
+                converged.
         """
 
         cont = self.cfg.continuation
         error = np.inf
+        stm_half_T = np.eye(6)
 
         for i in range(cont.max_iter):
             X_full = np.append(X, stm_identity).tolist()
 
-            Fx, state_half_T, Phi = eom.constraint(X_full, self.mu_star)
+            try:
+                Fx, state_half_T, stm_half_T = eom.constraint(
+                    X_full, self.mu_star, r_min=0.1 * self.r_secondary
+                )
+            except RuntimeError:
+                error = np.inf
+                break
+            assert stm_half_T is not None
             error = np.linalg.norm(Fx)
 
+            if not np.isfinite(error):
+                error = np.inf
+                break
             if error < cont.eps:
                 break
 
-            dFx = eom.jacobian(X, self.mu_star, state_half_T, Phi)
-            X = X - 0.3 * dFx.T @ (np.linalg.inv(dFx @ dFx.T) @ Fx)
+            dFx = eom.jacobian(X, self.mu_star, state_half_T, stm_half_T)
+            step_factor = 0.3 if error > 1e-4 else 1.0
+            X = X - step_factor * dFx.T @ (np.linalg.inv(dFx @ dFx.T) @ Fx)
 
             if self.cfg.verbose:
                 print(
@@ -159,7 +199,7 @@ class Family:
                     f"cond = {np.linalg.cond(dFx @ dFx.T):.2e}"
                 )
 
-        return X, error
+        return X, error, stm_half_T
 
     def _propagate_and_validate(self, X: list) -> tuple[np.ndarray, np.ndarray, bool]:
         """Propagate one full orbital period and check secondary-body intersection
@@ -204,56 +244,80 @@ class Family:
         return states, times, valid
 
     def _continuation_step(
-        self, X: list, z: np.ndarray
+        self, X: list, z: np.ndarray | None
     ) -> tuple[list, np.ndarray, bool]:
         """Advance one pseudo-arclength continuation step along an orbit family
 
-        Performs a predictor-corrector step along the solution manifold using a
-        pseudo-arclength continuation method. Advances the current solution estimate
-        and updates the tangent direction along the family.
+        Predicts the next orbit a distance `step` along the family tangent, then
+        solves the periodicity constraints together with the pseudo-arclength
+        condition by Newton's method with the exact Jacobian
+        from the state transition matrix. If Newton does not converge within 10
+        iterations, the step is halved and retried, up to 6 times.
 
         Args:
             X (ndarray):
                 Current free-variable vector at the current solution point.
-            z (ndarray):
+            z (ndarray or None):
                 Current tangent direction vector along the continuation manifold.
+                None on the first step: the family tangent at X is used, oriented
+                so the period initially increases for a positive step.
 
         Returns:
             X_new (ndarray):
-                Predicted/corrected free-variable vector for the next orbit.
+                Corrected free-variable vector for the next orbit.
             z_new (ndarray):
-                Updated tangent direction at the new solution point.
+                Updated unit tangent direction at the new solution point.
             success (bool):
-                False if the Jacobian is singular or the correction step fails;
-                True otherwise.
+                False if no step size converged; True otherwise.
         """
 
-        sol_predictor = X + z * self.cfg.continuation.step
+        cont = self.cfg.continuation
+        stm_identity = np.reshape(np.eye(6), (1, 36))[0]
+        X_old = np.asarray(X, dtype=float)
 
-        fss = fsolve(
-            eom.continuation_constraint,
-            X,
-            args=(z, sol_predictor, self.mu_star),
-            full_output=True,
-            xtol=1e-6,
-        )
-        X_new = fss[0]
+        if z is None:
+            X_full = np.append(X_old, stm_identity).tolist()
+            _, state_half_T, stm_half_T = eom.constraint(X_full, self.mu_star)
+            dFx = eom.jacobian(X_old, self.mu_star, state_half_T, stm_half_T)
+            null: np.ndarray = np.linalg.svd(dFx)[2][-1]
+            z = null if null[3] > 0 else -null
 
-        # Reconstruct Jacobian
-        Q = fss[1]["fjac"]
-        Rs = fss[1]["r"]
-        R = np.zeros((4, 4))
-        idx, col = np.triu_indices(4, k=0)
-        R[idx, col] = Rs
-        J = Q.T @ R
+        step = cont.step
+        for _ in range(7):
+            sol_predictor = X_old + z * step
+            X_new = sol_predictor.copy()
+            error_first = None
 
-        try:
-            z_new = np.linalg.inv(J) @ [0.0, 0.0, 0.0, 1.0]
-            z_new = z_new / np.linalg.norm(z_new)
-            return X_new, z_new, True
-        except np.linalg.LinAlgError:
-            warnings.warn("Singular Jacobian — stopping continuation.")
-            return X_new, z, False
+            for _ in range(10):
+                X_full = np.append(X_new, stm_identity).tolist()
+                try:
+                    Fx, state_half_T, stm_half_T = eom.constraint(
+                        X_full, self.mu_star, r_min=0.1 * self.r_secondary
+                    )
+                except RuntimeError:
+                    break
+                G = np.append(Fx, z @ (X_new - sol_predictor))
+                error = np.linalg.norm(G)
+                if error_first is None:
+                    error_first = error
+                if not error < 1e3 * max(error_first, 1e-8):
+                    break
+
+                dFx = eom.jacobian(X_new, self.mu_star, state_half_T, stm_half_T)
+                if error < cont.eps:
+                    z_new = np.linalg.svd(dFx)[2][-1]
+                    z_new = z_new if z_new @ z > 0 else -z_new
+                    return X_new.tolist(), z_new, True
+
+                try:
+                    X_new = X_new - np.linalg.solve(np.vstack([dFx, z]), G)
+                except np.linalg.LinAlgError:
+                    break
+
+            step = step / 2
+
+        warnings.warn("Continuation step did not converge — stopping continuation.")
+        return X_old.tolist(), z, False
 
     def plot(self):
         """Plot all orbits in the family on a single 3D figure
