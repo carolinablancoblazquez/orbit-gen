@@ -32,6 +32,10 @@ class Orbit:
         times (ndarray or None):
             Time array of shape (N,) corresponding to `states`. None until
             `propagate()` is called.
+        monodromy (ndarray or None):
+            Monodromy matrix (state transition matrix over one full period) of
+            shape (6, 6). None until `propagate(monodromy=True)` is called,
+            unless set by `Family` during continuation.
     """
 
     def __init__(
@@ -52,6 +56,7 @@ class Orbit:
 
         self.states = None
         self.times = None
+        self.monodromy = None
 
     @property
     def period_days(self) -> float:
@@ -65,12 +70,25 @@ class Orbit:
         """Full-period free variable vector [x0, z0, vy0, T]."""
         return [self.x0, self.z0, self.vy0, self.period]
 
-    def propagate(self):
+    def propagate(self, monodromy: bool = False):
         """Integrate the trajectory for one full period.
 
         Stores results in self.states and self.times.
+
+        Args:
+            monodromy (bool, optional):
+                If True, also integrate the state transition matrix and store
+                Phi(T, 0) in self.monodromy.
         """
-        self.states, self.times = eom.propagate(self._free_var, self.mu_star)
+        if monodromy:
+            stm_identity = np.reshape(np.eye(6), (1, 36))[0]
+            states, self.times = eom.propagate(
+                np.append(self._free_var, stm_identity), self.mu_star
+            )
+            self.states = states[:, 0:6]
+            self.monodromy = np.reshape(states[-1, 6:], (6, 6))
+        else:
+            self.states, self.times = eom.propagate(self._free_var, self.mu_star)
 
     def plot(self, ax=None, **kwargs):
         """Plot the orbit in 3D
