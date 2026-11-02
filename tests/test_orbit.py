@@ -1,6 +1,7 @@
 import numpy as np
 
 from orbit_gen.orbit import Orbit
+from orbit_gen.utils import eom
 
 
 def _make_orbit(mu_star, ic, cu):

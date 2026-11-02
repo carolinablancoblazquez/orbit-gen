@@ -1,8 +1,12 @@
-import numpy as np
 from types import SimpleNamespace
+
+import numpy as np
+import pytest
+from scipy.optimize import brentq
 
 from orbit_gen.family import Family
 from orbit_gen.orbit import Orbit
+from orbit_gen.utils import eom
 
 
 def _make_family(mu_star, cu, r_secondary=0.004519771071800208):
