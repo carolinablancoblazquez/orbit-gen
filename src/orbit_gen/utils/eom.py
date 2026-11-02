@@ -31,24 +31,12 @@ def cr3bp_eom(t, w, mu_star):
     m1 = 1 - mu_star
     m2 = mu_star
 
-    r1 = mu_star
-    r2 = 1 - mu_star
-    r_1O = r1 * np.array([-1, 0, 0])
-    r_2O = r2 * np.array([1, 0, 0])
+    r1_mag = np.sqrt((x + m2) ** 2 + y**2 + z**2)
+    r2_mag = np.sqrt((x - 1 + m2) ** 2 + y**2 + z**2)
 
-    r_PO = np.array([x, y, z])
-    v_PO = np.array([vx, vy, vz])
-
-    r_P1 = r_PO - r_1O
-    r_P2 = r_PO - r_2O
-    r1_mag = np.linalg.norm(r_P1)
-    r2_mag = np.linalg.norm(r_P2)
-
-    F_g = -m1 / r1_mag**3 * r_P1 - m2 / r2_mag**3 * r_P2
-
-    e3 = np.array([0, 0, 1])
-    a_PO = F_g - 2 * np.cross(e3, v_PO) - np.cross(e3, np.cross(e3, r_PO))
-    ax, ay, az = a_PO
+    ax = 2 * vy + x - m1 * (x + m2) / r1_mag**3 - m2 * (x - 1 + m2) / r2_mag**3
+    ay = -2 * vx + y - m1 * y / r1_mag**3 - m2 * y / r2_mag**3
+    az = -m1 * z / r1_mag**3 - m2 * z / r2_mag**3
 
     if len(w) > 7:
         dxdx = (
@@ -76,11 +64,13 @@ def cr3bp_eom(t, w, mu_star):
         )
 
         Phi = np.reshape(w[6:], (6, 6))
-        Z = np.zeros([3, 3])
         I = np.identity(3)
         A = np.array([[dxdx, dxdy, dxdz], [dxdy, dydy, dydz], [dxdz, dydz, dzdz]])
         Omega = np.array([[0, 2, 0], [-2, 0, 0], [0, 0, 0]])
-        J = np.block([[Z, I], [A, Omega]])
+        J = np.zeros([6, 6])
+        J[:3, 3:] = I
+        J[3:, :3] = A
+        J[3:, 3:] = Omega
         dPhi = np.reshape(J @ Phi, (1, 36))[0]
         dw = np.append([vx, vy, vz, ax, ay, az], dPhi)
     else:
@@ -89,7 +79,7 @@ def cr3bp_eom(t, w, mu_star):
     return dw
 
 
-def propagate(free_var, mu_star):
+def propagate(free_var, mu_star, dense=True, r_min=None):
     """Integrate the CR3BP equations of motion over one full orbital period
 
     Performs numerical propagation of the CR3BP dynamics using the provided
@@ -104,6 +94,13 @@ def propagate(free_var, mu_star):
                 (flattened 6×6 STM, total state dimension = 42).
         mu_star (float):
             CR3BP mass parameter.
+        dense (bool, optional):
+            If True, return 8 evenly spaced samples inside every integrator step
+            (from the integrator's dense output); if False, only the step ends.
+        r_min (float, optional):
+            If given, stop the integration and raise RuntimeError when the
+            trajectory comes closer than r_min (DU) to the secondary body. Near
+            the body's centre the integrator would otherwise crawl.
 
     Returns:
         states (ndarray):
@@ -111,6 +108,10 @@ def propagate(free_var, mu_star):
             or (N, 42) when STM propagation is included.
         times (ndarray):
             Time vector of shape (N,) corresponding to integration output.
+
+    Raises:
+        RuntimeError:
+            If the integration fails or comes within r_min of the secondary.
     """
 
     if len(free_var) > 4:
@@ -122,11 +123,41 @@ def propagate(free_var, mu_star):
 
     T = free_var[3]
 
-    sol = solve_ivp(crtbp_eom, [0, T], x0, args=(mu_star,), rtol=1e-12, atol=1e-12)
-    return sol.y.T, sol.t
+    events = None
+    if r_min is not None:
+
+        def too_close(t, w, mu_star):
+            return (w[0] - 1 + mu_star) ** 2 + w[1] ** 2 + w[2] ** 2 - r_min**2
+
+        setattr(too_close, "terminal", True)
+        events = too_close
+
+    sol = solve_ivp(
+        cr3bp_eom,
+        [0, T],
+        x0,
+        args=(mu_star,),
+        method="DOP853",
+        rtol=1e-13,
+        atol=1e-15,
+        dense_output=dense,
+        events=events,
+    )
+    if not sol.success:
+        raise RuntimeError(f"Integration failed: {sol.message}")
+    if sol.status == 1:
+        raise RuntimeError("Trajectory came within r_min of the secondary body")
+
+    if not dense:
+        return sol.y.T, sol.t
+
+    times = np.append(
+        np.linspace(sol.t[:-1], sol.t[1:], 8, endpoint=False).T.ravel(), sol.t[-1]
+    )
+    return sol.sol(times).T, times
 
 
-def constraint(free_var, mu_star):
+def constraint(free_var, mu_star, r_min=None):
     """Evaluate periodicity constraints for CR3BP symmetric periodic orbit
 
     Computes the constraint vector enforcing periodicity at the half-period
@@ -139,6 +170,8 @@ def constraint(free_var, mu_star):
             followed by a flattened 6×6 state transition matrix (STM).
         mu_star (float):
             CR3BP mass parameter (normalized secondary mass).
+        r_min (float, optional):
+            Passed to `propagate`.
 
     Returns:
         Fx (ndarray, shape (3,)):
@@ -150,7 +183,7 @@ def constraint(free_var, mu_star):
             State transition matrix evaluated at T/2.
     """
 
-    states, _ = propagate(free_var, mu_star)
+    states, _ = propagate(free_var, mu_star, dense=False, r_min=r_min)
     state = states[-1]
 
     Fx = np.array([state[1], state[3], state[5]])
@@ -202,34 +235,6 @@ def jacobian(free_var, mu_star, state_half_T, Phi):
     dFx[:, 3] = ddT
 
     return dFx
-
-
-def continuation_constraint(w, z, sol_predictor, mu_star):
-    """System of equations for pseudo-arclength continuation (for root finding)
-
-    Defines the augmented nonlinear system used in pseudo-arclength continuation,
-    typically solved using `fsolve`. Combines the CR3BP periodicity constraints
-    with the arclength constraint relative to a predictor step.
-
-    Args:
-        w (array_like):
-            Current free-variable vector [x0, z0, vy0, T/2].
-        z (ndarray):
-            Tangent direction vector at the current solution point.
-        sol_predictor (ndarray):
-            Predicted solution from the continuation predictor step.
-        mu_star (float):
-            CR3BP mass parameter (normalized secondary mass).
-
-    Returns:
-        ndarray, shape (4,):
-            Residual vector combining periodicity constraints and arclength
-            condition, suitable for nonlinear root solving.
-    """
-
-    Fx, _, _ = constraint(w, mu_star)
-    zeq = z.T @ (w - sol_predictor)
-    return np.append(Fx, zeq)
 
 
 def jacobi_constant(pos, vel, mu_star):
