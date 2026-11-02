@@ -1,10 +1,12 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
+from pathlib import Path
+
+import yaml
+
 from .orbit_ic import OrbitIC
 from .system_config import SystemConfig, EM_SYSTEM, SE_SYSTEM
 from .presets import PRESETS
 from .kernels import ensure_kernels
-from pathlib import Path
-import yaml
 
 _SYSTEMS = {
     "EM": EM_SYSTEM,

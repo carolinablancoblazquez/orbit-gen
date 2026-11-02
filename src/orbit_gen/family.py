@@ -1,7 +1,7 @@
 import warnings
+
 import numpy as np
 import spiceypy as spice
-from scipy.optimize import fsolve
 import astropy.units as u
 
 from orbit_gen.utils import eom, units

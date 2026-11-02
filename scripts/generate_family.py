@@ -1,6 +1,7 @@
+from pathlib import Path
+
 from orbit_gen.setup.config import RunConfig
 from orbit_gen.family import Family
-from pathlib import Path
 
 CONFIG_PATH = Path(__file__).resolve().parent.parent / "orbit_config.yaml"
 
