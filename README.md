@@ -32,11 +32,11 @@ Requires Python 3.11+.
 system: SE                      # "EM" (Earth-Moon) or "SE" (Sun-Earth)
 preset: SE_L2_Northern_Halo
 
-max_iter: 1000                  # Maximum Newton iterations for a single differential correct attempt
-eps: 1.0e-6                     # Differential-correction convergence tolerance on residual norm
+max_iter: 100                   # Maximum Newton iterations for a single differential correct attempt
+eps: 1.0e-10                    # Convergence tolerance on the residual norm (corrector and continuation steps)
 step: 0.01                      # Pseudo-arclength step size
-max_solutions: 20               # Maximum number of orbits to generate
-max_period_days: 1000.0         # Maximum full orbit period in days
+max_solutions: 20               # Maximum number of continuation steps
+max_period_days: .inf           # Maximum full orbit period in days (.inf for no limit)
 
 output_dir: results
 show_plots: false               # Optional; for user use only
@@ -46,6 +46,8 @@ verbose: true                   # Print progress messages (warnings always show)
 > **Note:** `step` is the distance moved along the family's tangent direction at each step. Its sign sets the initial direction: a positive value results in an initially increasing period, a negative value results in an initially decreasing period.
 
 > **Note:** A relative `output_dir` is resolved from the folder containing the config file.
+
+> **Note:** All continuation parameters are optional; any left out take the defaults shown above. Write numbers in exponent form with a decimal point and a signed exponent (`1.0e-10`, not `1e-10`).
 
 ```python
 from orbit_gen import Family, RunConfig

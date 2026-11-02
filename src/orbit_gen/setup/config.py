@@ -25,20 +25,19 @@ class ContinuationConfig:
             Maximum number of Newton iterations for a single
             differential correction attempt
         max_period_days (float):
-            Maximum allowable full orbit period, in days
+            Maximum allowable full orbit period, in days (no limit by default)
         max_solutions (int):
-            Maximum number of converged periodic orbits to generate before
-            terminating continuation
+            Maximum number of continuation steps before terminating
         step (float):
             Pseudo-arclength continuation step size in canonical units
 
     """
 
-    max_iter: int = 1000
-    eps: float = 1e-6
+    max_iter: int = 100
+    eps: float = 1e-10
     step: float = 0.01
-    max_solutions: int = 10
-    max_period_days: float = 1000.0
+    max_solutions: int = 20
+    max_period_days: float = float("inf")
 
 
 @dataclass
@@ -93,19 +92,9 @@ class RunConfig:
         system = _SYSTEMS[data["system"]]
         ic = PRESETS[data["preset"]]
 
-        if system.name == "EM":
-            period_max_default = 50.0
-        elif system.name == "SE":
-            period_max_default = 500.0
-        else:
-            raise RuntimeError("Unknown system name")
-
+        names = {f.name for f in fields(ContinuationConfig)}
         continuation = ContinuationConfig(
-            max_iter=data.get("max_iter", 100),
-            eps=data.get("eps", 1e-6),
-            step=data.get("step", 0.01),
-            max_solutions=data.get("max_solutions", 20),
-            max_period_days=data.get("max_period_days", period_max_default),
+            **{key: value for key, value in data.items() if key in names}
         )
 
         return cls(
