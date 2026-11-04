@@ -1,13 +1,13 @@
 import warnings
 
+import astropy.units as u
 import numpy as np
 import spiceypy as spice
-import astropy.units as u
 
-from orbit_gen.utils import eom, units
 from orbit_gen.orbit import Orbit
 from orbit_gen.setup.config import RunConfig
 from orbit_gen.setup.system_config import CanonicalUnits
+from orbit_gen.utils import eom, units
 
 
 class Family:
