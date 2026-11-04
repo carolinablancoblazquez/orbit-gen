@@ -1,5 +1,6 @@
-import pytest
 import logging
+
+import pytest
 import numpy as np
 import spiceypy as spice
 

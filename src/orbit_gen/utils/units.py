@@ -1,5 +1,6 @@
-from ..setup.system_config import CanonicalUnits
 import astropy.units as u
+
+from ..setup.system_config import CanonicalUnits
 
 
 def time_to_canonical(dim_time, cu: CanonicalUnits):

@@ -44,8 +44,8 @@ def test_velocity_passthrough_and_autonomous(mu_star):
     # dx/dt, dy/dt, dz/dt must equal vx, vy, vz directly.
     w = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
 
-    dw_t0 = eom.crtbp_eom(0.0, w, mu_star)
-    dw_t100 = eom.crtbp_eom(100.0, w, mu_star)
+    dw_t0 = eom.cr3bp_eom(0.0, w, mu_star)
+    dw_t100 = eom.cr3bp_eom(100.0, w, mu_star)
 
     assert dw_t0[0] == w[3]
     assert dw_t0[1] == w[4]
@@ -54,20 +54,20 @@ def test_velocity_passthrough_and_autonomous(mu_star):
 
 
 def test_stm_jacobian(mu_star):
-    # With Phi=I, crtbp_eom returns dPhi = J. Verify against numerical
+    # With Phi=I, cr3bp_eom returns dPhi = J. Verify against numerical
     # finite difference across all 6 state components.
     w_state = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
     w = w_state + list(np.eye(6).flatten())
 
-    J_analytic = np.reshape(eom.crtbp_eom(0.0, w, mu_star)[6:], (6, 6))
+    J_analytic = np.reshape(eom.cr3bp_eom(0.0, w, mu_star)[6:], (6, 6))
 
     eps = 1e-7
-    f0 = np.array(eom.crtbp_eom(0.0, w_state, mu_star))
+    f0 = np.array(eom.cr3bp_eom(0.0, w_state, mu_star))
     J_numeric = np.zeros((6, 6))
     for i in range(6):
         w_pert = list(w_state)
         w_pert[i] += eps
-        J_numeric[:, i] = (np.array(eom.crtbp_eom(0.0, w_pert, mu_star)) - f0) / eps
+        J_numeric[:, i] = (np.array(eom.cr3bp_eom(0.0, w_pert, mu_star)) - f0) / eps
 
     np.testing.assert_allclose(J_analytic, J_numeric, atol=1e-5)
 
@@ -118,3 +118,20 @@ def test_constraint_time_derivative_finite_difference(free_var, mu_star):
     dFx_dT_analytic = dFx_analytic[:, 3]
 
     np.testing.assert_allclose(dFx_dT_numeric, dFx_dT_analytic, atol=1e-5, rtol=1e-4)
+
+
+def test_propagate_dense_times(free_var, mu_star):
+    states, times = eom.propagate(free_var, mu_star)
+    sparse_states, sparse_times = eom.propagate(free_var, mu_star, dense=False)
+    assert times[0] == 0.0
+    assert times[-1] == free_var[3]
+    assert np.all(np.diff(times) > 0)
+    assert len(times) == 8 * (len(sparse_times) - 1) + 1
+    assert states.shape == (len(times), 6)
+    np.testing.assert_allclose(states[-1], sparse_states[-1], rtol=0, atol=1e-12)
+
+
+def test_propagate_r_min_stops_close_approach(mu_star):
+    free_var = [1 - mu_star + 0.05, 0.0, 0.0, 2.0]
+    with pytest.raises(RuntimeError, match="r_min"):
+        eom.propagate(free_var, mu_star, r_min=0.01)

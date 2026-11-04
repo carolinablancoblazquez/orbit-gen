@@ -1,6 +1,7 @@
 import numpy as np
 
 from orbit_gen.orbit import Orbit
+from orbit_gen.utils import eom
 
 
 def _make_orbit(mu_star, ic, cu):
@@ -27,6 +28,21 @@ def test_propagate_populates_states(mu_star, ic, cu):
     assert orbit.times is not None
     assert orbit.states.shape[1] == 6
     assert len(orbit.times) == len(orbit.states)
+    assert orbit.monodromy is None
+
+
+def test_propagate_monodromy(mu_star, ic, cu):
+    orbit = _make_orbit(mu_star, ic, cu)
+    orbit.propagate(monodromy=True)
+    assert orbit.states is not None
+    assert orbit.states.shape[1] == 6
+    assert orbit.monodromy is not None
+    assert orbit.monodromy.shape == (6, 6)
+    f_0 = np.array(eom.cr3bp_eom(0.0, orbit.states[0], mu_star))
+    f_T = np.array(eom.cr3bp_eom(0.0, orbit.states[-1], mu_star))
+    np.testing.assert_allclose(
+        orbit.monodromy @ f_0, f_T, rtol=0, atol=1e-8 * np.linalg.norm(f_T)
+    )
 
 
 def test_period_days(mu_star, ic, cu):

@@ -78,7 +78,7 @@ def reference_points(system: SystemConfig, mu_star: float) -> dict[str, float]:
 
     def ax_at_rest(x_rest: float) -> float:
         """x-acceleration of a particle at rest at (x_rest, 0, 0)."""
-        return eom.crtbp_eom(0.0, [x_rest, 0.0, 0.0, 0.0, 0.0, 0.0], mu_star)[3]
+        return eom.cr3bp_eom(0.0, [x_rest, 0.0, 0.0, 0.0, 0.0, 0.0], mu_star)[3]
 
     eps = 1e-8
     brackets = {
