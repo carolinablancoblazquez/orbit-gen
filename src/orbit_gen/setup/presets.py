@@ -2,7 +2,7 @@ from .orbit_ic import OrbitIC
 
 PRESETS: dict[str, OrbitIC] = {
     "EM_L2_Northern_Halo": OrbitIC(
-        name="EM_L2_Northern",
+        name="EM_L2_Northern_Halo",
         x0=1.0110350588,
         z0=-0.1731500000,
         vy0=-0.0780141199,
