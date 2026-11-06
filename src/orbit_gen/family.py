@@ -1,13 +1,13 @@
 import warnings
 
+import astropy.units as u
 import numpy as np
 import spiceypy as spice
-import astropy.units as u
 
-from orbit_gen.utils import eom, units
 from orbit_gen.orbit import Orbit
 from orbit_gen.setup.config import RunConfig
 from orbit_gen.setup.system_config import CanonicalUnits
+from orbit_gen.utils import eom, units
 
 
 class Family:
@@ -83,15 +83,16 @@ class Family:
             X, error, stm_half_T = self._correct_orbit(X, stm_identity)
 
             if X[-1] < 0:
-                warnings.warn("Negative period.")
+                warnings.warn("Negative period.", stacklevel=1)
                 break
             if error > cont.eps:
-                warnings.warn("Corrector did not converge.")
+                warnings.warn("Corrector did not converge.", stacklevel=1)
                 break
 
             if abs(X[1]) < 1e-9 and abs(X[2]) < 1e-9:
                 warnings.warn(
-                    "Collapsed to an equilibrium point — stopping continuation."
+                    "Collapsed to an equilibrium point — stopping continuation.",
+                    stacklevel=1,
                 )
                 break
 
@@ -100,7 +101,8 @@ class Family:
             if abs(z0_first) > 1e-6 and X[1] / z0_first < 1e-3:
                 warnings.warn(
                     "Family reached a planar orbit (bifurcation) — "
-                    "stopping continuation."
+                    "stopping continuation.",
+                    stacklevel=1,
                 )
                 break
 
@@ -195,7 +197,7 @@ class Family:
 
             if self.cfg.verbose:
                 print(
-                    f"  iter {i+1:2d} | error = {error:.3e} | "
+                    f"  iter {i + 1:2d} | error = {error:.3e} | "
                     f"cond = {np.linalg.cond(dFx @ dFx.T):.2e}"
                 )
 
@@ -316,7 +318,10 @@ class Family:
 
             step = step / 2
 
-        warnings.warn("Continuation step did not converge — stopping continuation.")
+        warnings.warn(
+            "Continuation step did not converge — stopping continuation.",
+            stacklevel=1,
+        )
         return X_old.tolist(), z, False
 
     def plot(self):
@@ -365,6 +370,7 @@ class Family:
         print(f"Saved {len(self.orbits)} orbits to {self.cfg.output_path}")
 
     def __repr__(self):
+        """Return a summary of the system, preset, and orbit count."""
         return (
             f"Family(system={self.cfg.system.name}, "
             f"ic={self.cfg.ic.name}, "

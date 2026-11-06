@@ -31,7 +31,8 @@ FG_COLOR = "white"
 if 100 % FPS or FPS > 50:
     warnings.warn(
         f"FPS = {FPS} can't be stored exactly in a GIF, which uses whole hundredths "
-        "of a second per frame. Use a divisor of 100 that is at most 50."
+        "of a second per frame. Use a divisor of 100 that is at most 50.",
+        stacklevel=1,
     )
 
 
@@ -115,7 +116,7 @@ periods_days = units.time_to_dimensional(periods, cu).to_value(u.day)
 
 positions = []
 reveal_ends = []
-for i, (state, period) in enumerate(zip(states, periods)):
+for i, (state, period) in enumerate(zip(states, periods, strict=True)):
     orbit_states, times = eom.propagate([state[0], state[2], state[4], period], mu_star)
     positions.append(orbit_states[:, 0:3])
     # Number of points drawn at each reveal step, evenly spaced in time
@@ -208,7 +209,7 @@ def update(frame: int) -> None:
     ax.view_init(elev=20, azim=-60 + 0.6 * frame)
     active, step = divmod(frame, FRAMES_PER_ORBIT)
 
-    for line, r in zip(lines[:active], positions):
+    for line, r in zip(lines[:active], positions, strict=False):
         line.set_data_3d(r[:, 0], r[:, 1], r[:, 2])
         line.set_alpha(0.65)
         line.set_linewidth(1.5)
@@ -218,8 +219,7 @@ def update(frame: int) -> None:
         lines[active].set_data_3d(r[:, 0], r[:, 1], r[:, 2])
         head.set_data_3d(r[-1:, 0], r[-1:, 1], r[-1:, 2])
         hud.set_text(
-            f"orbit {active + 1}/{n_orbits}\n"
-            f"period = {periods_days[active]:.3f} days"
+            f"orbit {active + 1}/{n_orbits}\nperiod = {periods_days[active]:.3f} days"
         )
     else:
         head.set_data_3d([], [], [])

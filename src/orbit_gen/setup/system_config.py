@@ -12,6 +12,7 @@ class CanonicalUnits:
 
     @property
     def du_m(self) -> float:
+        """float: Canonical distance unit in meters."""
         return (self.dist_km * u.km).to("m").value
 
 

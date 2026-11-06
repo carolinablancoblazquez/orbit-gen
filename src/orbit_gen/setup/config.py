@@ -3,10 +3,10 @@ from pathlib import Path
 
 import yaml
 
-from .orbit_ic import OrbitIC
-from .system_config import SystemConfig, EM_SYSTEM, SE_SYSTEM
-from .presets import PRESETS
 from .kernels import ensure_kernels
+from .orbit_ic import OrbitIC
+from .presets import PRESETS
+from .system_config import EM_SYSTEM, SE_SYSTEM, SystemConfig
 
 _SYSTEMS = {
     "EM": EM_SYSTEM,
@@ -77,14 +77,26 @@ class RunConfig:
 
     @property
     def output_filename(self) -> str:
+        """str: Output .npz filename, from the initial condition's name."""
         return f"{self.ic.name}.npz"
 
     @property
     def output_path(self) -> Path:
+        """Path: Full path of the output .npz file, output_dir / output_filename."""
         return self.output_dir / self.output_filename
 
     @classmethod
     def from_yaml(cls, yaml_path: str | Path) -> "RunConfig":
+        """Build a RunConfig from a YAML file
+
+        Args:
+            yaml_path (str or pathlib.Path):
+                Path to the YAML config.
+
+        Returns:
+            config (RunConfig):
+                Run configuration built from the file.
+        """
         yaml_path = Path(yaml_path)
         with open(yaml_path) as yp:
             data = yaml.safe_load(yp)
