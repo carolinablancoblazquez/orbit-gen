@@ -10,21 +10,28 @@ PRESETS: dict[str, dict[str, OrbitIC]] = {
             half_period=1.3632096570 / 2,
         ),
         "SE" : OrbitIC(
-        name="SE_L2_Southern_Halo",
-        x0=1.0057032659079346,
-        z0=-1.2409260038177099e-2,
-        vy0=-1.2623398608372105e-2,
-        half_period=2.1172370586539060 / 2,
+            name="SE_L2_Southern_Halo",
+            x0=1.0057032659079346,
+            z0=-1.2409260038177099e-2,
+            vy0=-1.2623398608372105e-2,
+            half_period=2.1172370586539060 / 2,
         ),
     },
 
-    "DRO_1": {
+    "DRO": {
         "EM" : OrbitIC(
-            name="EM_DRO_1",
+            name="EM_DRO",
             x0=0.583856747,
             z0=0.0,
             vy0=0.96455414,
             half_period=5.70245716 / 2,
+        ),
+        "SE" : OrbitIC(
+            name="SE_DRO",
+            x0=1.0005627381528093e+0,
+            z0=-9.9084312832447642e-27,
+            vy0=-7.4041644955106137e-2,
+            half_period=4.8020469554671263e-2 / 2,
         ),
     },
 
@@ -35,6 +42,13 @@ PRESETS: dict[str, dict[str, OrbitIC]] = {
             z0=0.181519309916197,
             vy0=0.257898218422393,
             half_period=1.22727308466325,
+        ),
+        "SE" : OrbitIC(
+            name="SE_L1_Northern_Halo",
+            x0=9.9342988420305367e-1,
+            z0=1.2285790238546899e-2,
+            vy0=1.3842107210222549e-2,
+            half_period=2.2812718320995415e+0 / 2,
         ),
     },
 
@@ -56,6 +70,13 @@ PRESETS: dict[str, dict[str, OrbitIC]] = {
     },
 
     "L2_Northern_Halo": {
+        "EM" : OrbitIC(
+            name="EM_L2_Northern_Halo",
+            x0=1.0924697204324003e+0,
+            z0=2.0118187175809177e-1,
+            vy0=-2.0999964360980777e-1,
+            half_period=2.5256026213792353e+0 / 2,
+        ),
         "SE" : OrbitIC(
             name="SE_L2_Northern_Halo",
             x0=1.0082893998277027,
@@ -66,6 +87,13 @@ PRESETS: dict[str, dict[str, OrbitIC]] = {
     },
 
     "L2_Lyapunov": {
+        "EM" : OrbitIC(
+            name="EM_L2_Lyapunov",
+            x0=1.1213042091132026e+0,
+            z0=1.0696906809883904e-29,
+            vy0=1.7168023931614440e-1,
+            half_period=3.4134266416026278e+0 / 2,
+        ),
         "SE" : OrbitIC(
             name="SE_L2_Lyapunov",
             x0=1.0030516289641727,
@@ -76,12 +104,29 @@ PRESETS: dict[str, dict[str, OrbitIC]] = {
     },
 
     "Dragonfly": {
+        "EM" : OrbitIC(
+            name="EM_Dragonfly",
+            x0=1.1436327184719191e+0,
+            z0=1.0109395279050720e-1,
+            vy0=-3.4052545075190177e-1,
+            half_period=6.8974361097955299e+0 / 2,
+        ),
         "SE" : OrbitIC(
             name="SE_Dragonfly",
             x0=1.0087123143716323,
             z0=1.0173103235716078e-2,
             vy0=-1.6680589951751042e-2,
             half_period=5.6228423897645730 / 2,
+        ),
+    },
+    
+    "3_1_Lunar_Resonant" : {
+        "EM" : OrbitIC(
+            name="EM_3_1_Lunar_Resonant",
+            x0=2.4285786740195644e-3,
+            z0=-7.6513528595122203e-57,
+            vy0=1.1534396288254891e+1,
+            half_period=6.2649639398149954e+0 / 2,
         ),
     },
 }
