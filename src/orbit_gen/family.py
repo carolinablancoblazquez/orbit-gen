@@ -355,20 +355,15 @@ class Family:
         states = np.array([o.states[0, :] for o in self.orbits])
         periods = np.array([o.period for o in self.orbits])
 
-        jacobi_constants = []
-
         for state in states:
             pos = state[0:3]
             vel = state[3:6]
-            C = eom.jacobi_constant(pos, vel, self.mu_star)
-            jacobi_constants.append(C)
         
         np.savez(
             self.cfg.output_path,
             states=states,
             periods=periods,
             mu_star=self.mu_star,
-            jacobi_constants=np.array(jacobi_constants),
         )
 
         print(f"Saved {len(self.orbits)} orbits to {self.cfg.output_path}")
