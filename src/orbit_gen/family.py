@@ -363,7 +363,7 @@ class Family:
         for state in states:
             pos = state[0:3]
             vel = state[3:6]
-        
+
         np.savez(
             self.cfg.output_path,
             states=states,
