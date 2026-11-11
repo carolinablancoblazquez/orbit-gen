@@ -8,6 +8,16 @@ from platformdirs import user_cache_dir
 
 @dataclass(frozen=True)
 class KernelSpec:
+    """A NAIF SPICE kernel file and its download URL
+
+    Attributes:
+        filename (str):
+            Name of the kernel file in the cache directory
+        url (str):
+            URL the kernel is downloaded from
+
+    """
+
     filename: str
     url: str
 
@@ -29,12 +39,33 @@ REQUIRED_KERNELS: tuple[KernelSpec, ...] = (
 
 
 def cache_dir() -> Path:
+    """Return the kernel cache directory, creating it if needed
+
+    Returns:
+        direc (pathlib.Path):
+            The `kernels` folder inside the platformdirs user cache directory for
+            orbit-gen.
+    """
     direc = Path(user_cache_dir("orbit-gen")) / "kernels"
     direc.mkdir(parents=True, exist_ok=True)
     return direc
 
 
 def ensure_kernel(spec: KernelSpec) -> Path:
+    """Return the cached path of a kernel, downloading it first if missing or empty
+
+    Args:
+        spec (KernelSpec):
+            Kernel to look up or download.
+
+    Returns:
+        dest (pathlib.Path):
+            Path of the kernel file in the cache directory.
+
+    Raises:
+        RuntimeError:
+            If the download fails.
+    """
     cache = cache_dir()
     dest = cache / spec.filename
 
@@ -54,4 +85,10 @@ def ensure_kernel(spec: KernelSpec) -> Path:
 
 
 def ensure_kernels() -> dict[str, Path]:
+    """Ensure all REQUIRED_KERNELS are cached, downloading any that are missing
+
+    Returns:
+        kernel_paths (dict[str, pathlib.Path]):
+            Cached path of each required kernel, keyed by filename.
+    """
     return {spec.filename: ensure_kernel(spec) for spec in REQUIRED_KERNELS}

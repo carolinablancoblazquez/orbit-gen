@@ -104,23 +104,42 @@ data["mu_star"]             # System mass ratio
 
 > **NOTE:** Use of `uv` is recommended for contributing to the repository. Installation instructions can be found [here](https://docs.astral.sh/uv/getting-started/installation/).
 
+### Setup
+
 Create a fork of the repository, clone the fork onto your local system, and run
 
 ```bash
 uv sync
 ```
 
-to install the package in editable mode plus dev dependencies. Run the test suite with:
-
-```bash
-uv run pytest
-```
+to install the package in editable mode plus dev dependencies (pytest, ruff, deptry).
+uv also installs a matching Python if needed.
 
 Optionally if plotting capabilities are desired, run
 
 ```bash
 uv sync --extra plotting
 ```
+
+Note that plain `uv sync` removes the plotting extra
+
+### Tests
+
+```bash
+uv run pytest
+```
+
+Note that the first run downloads NAIF SPICE kernels into user cache, so it needs network access.
+
+### Checks
+
+```bash
+uv run ruff check     # Lint
+uv run ruff format    # Format
+uv run deptry src     # Check imports
+```
+
+### Scripts
 
 The repo includes a driver script, `scripts/generate_family.py`,
 which reads `orbit_config.yaml` from the project root, runs continuation,

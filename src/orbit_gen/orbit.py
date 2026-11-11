@@ -158,6 +158,7 @@ class Orbit:
         )
 
     def __repr__(self):
+        """Return the initial state, x0, z0 and vy0, and the full period."""
         return (
             f"Orbit(x0={self.x0:.6f}, z0={self.z0:.6f}, "
             f"vy0={self.vy0:.6f}, T={self.period:.6f})"

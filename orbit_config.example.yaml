@@ -3,8 +3,8 @@
 # system: "EM" for Earth-Moon, "SE" for Sun-Earth
 # preset: Name from presets.py
 
-# NOTE: By default, the package looks to "orbit_config.yaml" for the
-# desired configuration. Please create the file using this template.
+# NOTE: The scripts in scripts/ read "orbit_config.yaml" from the repository
+# root. Please create the file using this template.
 
 system: SE
 preset: L2_Northern_Halo

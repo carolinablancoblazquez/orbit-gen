@@ -39,11 +39,30 @@ dev = [
     "deptry>=0.25.1",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
+    "ruff==0.17.3",
 ]
 
 [tool.pytest.ini_options]
 log_cli = true
 log_cli_level = "WARNING"
+
+[tool.ruff.lint]
+select = [
+    "E4", "E7", "E9", "F",
+    "D101", "D102", "D103", "D105", "D106", "D207", "D208", "D416", "D417", "D419",
+    "I",
+    "B",
+]
+ignore = ["E741"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D"]
+
+[tool.ruff.format]
+exclude = ["*.md"]
 
 [project.urls]
 Repository = "https://github.com/jmripic/orbit-gen"

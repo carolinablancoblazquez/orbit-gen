@@ -1,0 +1,15 @@
+version: 2
+updates:
+  # Keep the SHA-pinned actions in .github/workflows up to date.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    # Only propose releases that are at least a week old.
+    cooldown:
+      default-days: 7
+    # All action updates in one PR.
+    groups:
+      github-actions:
+        patterns:
+          - "*"
