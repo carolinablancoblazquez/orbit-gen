@@ -3,7 +3,7 @@ from orbit_gen.setup.config import ContinuationConfig, RunConfig
 
 def test_from_yaml_missing_keys_use_dataclass_defaults(tmp_path):
     path = tmp_path / "cfg.yaml"
-    path.write_text('system: "EM"\npreset: "DRO_1"\n')
+    path.write_text('system: "EM"\npreset: "DRO"\n')
     cfg = RunConfig.from_yaml(path)
     assert cfg.continuation == ContinuationConfig()
 
