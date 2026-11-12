@@ -9,11 +9,14 @@ from orbit_gen.orbit import Orbit
 from orbit_gen.utils import eom
 
 
-def _make_family(mu_star, cu, r_secondary=0.004519771071800208):
+def _make_family(
+    mu_star, cu, r_primary=6378.1366 / 384400, r_secondary=0.004519771071800208
+):
     fam = Family.__new__(Family)
     fam.mu_star = mu_star
     fam.m1 = 1 - mu_star
     fam.m2 = mu_star
+    fam.r_primary = r_primary
     fam.r_secondary = r_secondary
     fam.orbits = []
     fam.cfg = SimpleNamespace(
@@ -48,7 +51,7 @@ def test_propagate_and_validate_intersection(mu_star, cu, ic):
 
 def test_continuation_step_returns_normalized_tangent(mu_star, cu, ic):
     fam = _make_family(mu_star, cu)
-    z = np.array([0.0, 0.0, 0.0, -1.0])
+    z = None
     _, z_new, success = fam._continuation_step(ic, z)
     assert success is True
     assert z_new.shape == (4,)
@@ -294,6 +297,33 @@ def test_bifurcation_guard_threshold_not_reached(mu_star, cu, ic):
     fam._continuation_step = lambda X, z: (X, np.zeros(4), True)
     _run(fam, ic)
     assert len(fam.orbits) == 20
+
+
+def test_propagate_and_validate_primary_intersection(mu_star, cu, ic):
+    fam = _make_family(mu_star, cu, r_primary=1.0)
+    _, _, valid = fam._propagate_and_validate(ic.tolist())
+    assert valid is False
+
+
+def test_continuation_step_same_family_rejection(mu_star, cu, ic):
+    fam = _make_family(mu_star, cu)
+    X, _, _ = fam._correct_orbit(ic, np.eye(6).flatten())
+    X1, z1, _ = fam._continuation_step(X, None)
+    w = np.array([0.0, 1.0, 0.0, 0.0])
+    w = w - (w @ z1) * z1
+    z_bad = z1 + 0.5 * w / np.linalg.norm(w)
+    z_bad = z_bad / np.linalg.norm(z_bad)
+    with pytest.warns(UserWarning, match="same-family check"):
+        X_new, _, success = fam._continuation_step(X1, z_bad)
+    assert success is False
+    np.testing.assert_array_equal(X_new, X1)
+
+
+def test_period_guard(mu_star, cu, ic):
+    fam = _make_family(mu_star, cu)
+    with pytest.warns(UserWarning, match="Period below"):
+        with pytest.raises(RuntimeError, match="Continuation failed"):
+            _run(fam, [*ic[:3], 1e-12])
 
 
 def test_correct_orbit_later_integration_failure(mu_star, cu, ic, monkeypatch):
