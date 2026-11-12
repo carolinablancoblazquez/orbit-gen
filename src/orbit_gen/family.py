@@ -90,8 +90,12 @@ class Family:
             n_steps += 1
             X, error, stm_half_T = self._correct_orbit(X, stm_identity)
 
-            if X[-1] < 0:
-                warnings.warn("Negative period.", stacklevel=1)
+            if 2 * X[-1] < min_period:
+                warnings.warn(
+                    "Period below the shortest orbit possible outside the primary "
+                    "and secondary — stopping continuation.",
+                    stacklevel=1,
+                )
                 break
             if error > cont.eps:
                 warnings.warn("Corrector did not converge.", stacklevel=1)
@@ -268,7 +272,10 @@ class Family:
         solves the periodicity constraints together with the pseudo-arclength
         condition by Newton's method with the exact Jacobian
         from the state transition matrix. If Newton does not converge within 10
-        iterations, the step is halved and retried, up to 6 times.
+        iterations, or the new orbit fails the same-family check, the step is
+        halved and retried, up to 6 times. The same-family check requires the
+        chord from the old to the new orbit to point roughly along the mean of the two
+        family tangents.
 
         Args:
             X (ndarray):
@@ -284,7 +291,7 @@ class Family:
             z_new (ndarray):
                 Updated unit tangent direction at the new solution point.
             success (bool):
-                False if no step size converged; True otherwise.
+                False if no step size gave an accepted orbit; True otherwise.
         """
 
         cont = self.cfg.continuation
@@ -299,6 +306,7 @@ class Family:
             z = null if null[3] > 0 else -null
 
         step = cont.step
+        rejected = False
         for _ in range(7):
             sol_predictor = X_old + z * step
             X_new = sol_predictor.copy()
@@ -323,6 +331,11 @@ class Family:
                 if error < cont.eps:
                     z_new = np.linalg.svd(dFx)[2][-1]
                     z_new = z_new if z_new @ z > 0 else -z_new
+                    chord = (X_new - X_old) / np.linalg.norm(X_new - X_old)
+                    mean = np.sign(step) * (z + z_new) / np.linalg.norm(z + z_new)
+                    if np.linalg.norm(chord - mean) > 0.04:
+                        rejected = True
+                        break
                     return X_new.tolist(), z_new, True
 
                 try:
@@ -332,10 +345,11 @@ class Family:
 
             step = step / 2
 
-        warnings.warn(
-            "Continuation step did not converge — stopping continuation.",
-            stacklevel=1,
-        )
+        if rejected:
+            message = "no step size satisfied the same-family check"
+        else:
+            message = "corrector did not converge at any step size"
+        warnings.warn(f"Continuation stopped: {message}", stacklevel=1)
         return X_old.tolist(), z, False
 
     def plot(self):
