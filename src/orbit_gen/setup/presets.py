@@ -113,13 +113,22 @@ PRESETS: dict[str, dict[str, OrbitIC]] = {
             half_period=5.622842389764573 / 2,
         ),
     },
-    "3_1_Lunar_Resonant": {
+    "3_1_Lunar_Resonant_Planar": {
         "EM": OrbitIC(
-            name="EM_3_1_Lunar_Resonant",
+            name="EM_3_1_Lunar_Resonant_Planar",
             x0=2.4285786740195644e-3,
             z0=-7.6513528595122203e-57,
             vy0=1.1534396288254891e1,
             half_period=6.2649639398149954e0 / 2,
+        ),
+    },
+    "L2_Double_Loop":{
+        "SE" : OrbitIC(
+            name="SE_L2_Double_Loop",
+            x0=1.0100474443654743,
+            z0=0.009248459728745469,
+            vy0=-0.020424319253302937,
+            half_period=5.622943813223913 / 2,
         ),
     },
 }
