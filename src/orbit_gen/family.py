@@ -29,6 +29,8 @@ class Family:
             Normalized primary mass (1 - mu_star).
         m2 (float):
             Normalized secondary mass (mu_star).
+        r_primary (float):
+            Radius of the primary body in canonical distance units (DU).
         r_secondary (float):
             Radius of the secondary body in canonical distance units (DU).
         orbits (list[Orbit]):
@@ -61,6 +63,8 @@ class Family:
             dist_km=dist_km, time_days=time_seconds / 86400
         )
 
+        radii = spice.bodvrd(sys.primary, "RADII", 3)[1][0]
+        self.r_primary = units.pos_to_canonical(radii * u.km, sys.canonical_units)
         radii = spice.bodvrd(sys.secondary, "RADII", 3)[1][0]
         self.r_secondary = units.pos_to_canonical(radii * u.km, sys.canonical_units)
 
@@ -71,6 +75,10 @@ class Family:
             cont.max_period_days * u.d, self.cfg.system.canonical_units
         )
         stm_identity = np.reshape(np.eye(6), (1, 36))[0]
+        min_period = min(
+            2 * np.pi * np.sqrt(self.r_primary**3 / self.m1),
+            2 * np.pi * np.sqrt(self.r_secondary**3 / self.m2),
+        )
 
         # Free variables: [x0, z0, vy0, T/2]
         X = self.cfg.ic.as_list
@@ -82,8 +90,12 @@ class Family:
             n_steps += 1
             X, error, stm_half_T = self._correct_orbit(X, stm_identity)
 
-            if X[-1] < 0:
-                warnings.warn("Negative period.", stacklevel=1)
+            if 2 * X[-1] < min_period:
+                warnings.warn(
+                    "Period below the shortest orbit possible outside the primary "
+                    "and secondary — stopping continuation.",
+                    stacklevel=1,
+                )
                 break
             if error > cont.eps:
                 warnings.warn("Corrector did not converge.", stacklevel=1)
@@ -204,11 +216,11 @@ class Family:
         return X, error, stm_half_T
 
     def _propagate_and_validate(self, X: list) -> tuple[np.ndarray, np.ndarray, bool]:
-        """Propagate one full orbital period and check secondary-body intersection
+        """Propagate one full orbital period and check primary and secondary intersection
 
         Numerically integrates the trajectory over a full orbital period from the
         given initial conditions, then evaluates whether the trajectory intersects
-        or enters the secondary body's exclusion region.
+        or enters the primary or secondary body.
 
         Args:
             X (array-like):
@@ -222,8 +234,8 @@ class Family:
             times (ndarray):
                 Time samples corresponding to each state, shape (N,).
             valid (bool):
-                False if the trajectory intersects the secondary body or violates
-                the exclusion radius; True otherwise.
+                False if the trajectory intersects the primary or secondary body;
+                True otherwise.
         """
 
         X_full = X.copy()
@@ -231,17 +243,23 @@ class Family:
 
         states, times = eom.propagate(X_full, self.mu_star)
         positions = states[:, 0:3]
-        r_mag = np.linalg.norm(positions - [1 - self.mu_star, 0, 0], axis=1)
+        valid = True
+        for body, center, radius in (
+            ("primary", -self.mu_star, self.r_primary),
+            ("secondary", 1 - self.mu_star, self.r_secondary),
+        ):
+            r_mag = np.linalg.norm(positions - [center, 0, 0], axis=1)
 
-        if self.cfg.verbose:
-            closest_km = units.pos_to_dimensional(
-                min(r_mag), self.cfg.system.canonical_units
-            ).to_value(u.km)
-            print(f"  Closest approach to the secondary body: {closest_km:.2f} km")
+            if self.cfg.verbose:
+                closest_km = units.pos_to_dimensional(
+                    min(r_mag), self.cfg.system.canonical_units
+                ).to_value(u.km)
+                print(f"  Closest approach to the {body} body: {closest_km:.2f} km")
 
-        valid = not np.any(r_mag < self.r_secondary)
-        if not valid and self.cfg.verbose:
-            print("  Intersects secondary — discarding.")
+            if np.any(r_mag < radius):
+                valid = False
+                if self.cfg.verbose:
+                    print(f"  Intersects {body} — discarding.")
 
         return states, times, valid
 
@@ -254,7 +272,10 @@ class Family:
         solves the periodicity constraints together with the pseudo-arclength
         condition by Newton's method with the exact Jacobian
         from the state transition matrix. If Newton does not converge within 10
-        iterations, the step is halved and retried, up to 6 times.
+        iterations, or the new orbit fails the same-family check, the step is
+        halved and retried, up to 6 times. The same-family check requires the
+        chord from the old to the new orbit to point roughly along the mean of the two
+        family tangents.
 
         Args:
             X (ndarray):
@@ -270,7 +291,7 @@ class Family:
             z_new (ndarray):
                 Updated unit tangent direction at the new solution point.
             success (bool):
-                False if no step size converged; True otherwise.
+                False if no step size gave an accepted orbit; True otherwise.
         """
 
         cont = self.cfg.continuation
@@ -285,6 +306,7 @@ class Family:
             z = null if null[3] > 0 else -null
 
         step = cont.step
+        rejected = False
         for _ in range(7):
             sol_predictor = X_old + z * step
             X_new = sol_predictor.copy()
@@ -309,6 +331,11 @@ class Family:
                 if error < cont.eps:
                     z_new = np.linalg.svd(dFx)[2][-1]
                     z_new = z_new if z_new @ z > 0 else -z_new
+                    chord = (X_new - X_old) / np.linalg.norm(X_new - X_old)
+                    mean = np.sign(step) * (z + z_new) / np.linalg.norm(z + z_new)
+                    if np.linalg.norm(chord - mean) > 0.04:
+                        rejected = True
+                        break
                     return X_new.tolist(), z_new, True
 
                 try:
@@ -318,10 +345,11 @@ class Family:
 
             step = step / 2
 
-        warnings.warn(
-            "Continuation step did not converge — stopping continuation.",
-            stacklevel=1,
-        )
+        if rejected:
+            message = "no step size satisfied the same-family check"
+        else:
+            message = "corrector did not converge at any step size"
+        warnings.warn(f"Continuation stopped: {message}", stacklevel=1)
         return X_old.tolist(), z, False
 
     def plot(self):
