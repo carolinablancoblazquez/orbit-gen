@@ -1,6 +1,38 @@
 from .orbit_ic import OrbitIC
 
 PRESETS: dict[str, dict[str, OrbitIC]] = {
+    "L1_Northern_Halo": {
+        "EM": OrbitIC(
+            name="EM_L1_Northern_Halo",
+            x0=0.856382122325864,
+            z0=0.181519309916197,
+            vy0=0.257898218422393,
+            half_period=1.22727308466325,
+        ),
+        "SE": OrbitIC(
+            name="SE_L1_Northern_Halo",
+            x0=9.9342988420305367e-1,
+            z0=1.2285790238546899e-2,
+            vy0=1.3842107210222549e-2,
+            half_period=2.2812718320995415e0 / 2,
+        ),
+    },
+    "L2_Northern_Halo": {
+        "EM": OrbitIC(
+            name="EM_L2_Northern_Halo",
+            x0=1.0924697204324003e0,
+            z0=2.0118187175809177e-1,
+            vy0=-2.0999964360980777e-1,
+            half_period=2.5256026213792353e0 / 2,
+        ),
+        "SE": OrbitIC(
+            name="SE_L2_Northern_Halo",
+            x0=1.0082893998277027,
+            z0=0.011434182696839030,
+            vy0=-0.015179690420484332,
+            half_period=2.7047531095113841 / 2,
+        ),
+    },
     "L2_Southern_Halo": {
         "EM": OrbitIC(
             name="EM_L2_Southern_Halo",
@@ -33,54 +65,6 @@ PRESETS: dict[str, dict[str, OrbitIC]] = {
             half_period=4.8020469554671263e-2 / 2,
         ),
     },
-    "L1_Northern_Halo": {
-        "EM": OrbitIC(
-            name="EM_L1_Northern_Halo",
-            x0=0.856382122325864,
-            z0=0.181519309916197,
-            vy0=0.257898218422393,
-            half_period=1.22727308466325,
-        ),
-        "SE": OrbitIC(
-            name="SE_L1_Northern_Halo",
-            x0=9.9342988420305367e-1,
-            z0=1.2285790238546899e-2,
-            vy0=1.3842107210222549e-2,
-            half_period=2.2812718320995415e0 / 2,
-        ),
-    },
-    "Butterfly": {
-        "EM": OrbitIC(
-            name="EM_Butterfly",
-            x0=1.06896234204296,
-            z0=0.159599443574046,
-            vy0=-0.00769167653854165,
-            half_period=1.66142030228280,
-        ),
-        "SE": OrbitIC(
-            name="SE_Butterfly",
-            x0=9.9478400099057562e-1,
-            z0=9.3307317319370944e-3,
-            vy0=-2.7018843432500038e-3,
-            half_period=3.6918732624381563 / 2,
-        ),
-    },
-    "L2_Northern_Halo": {
-        "EM": OrbitIC(
-            name="EM_L2_Northern_Halo",
-            x0=1.0924697204324003e0,
-            z0=2.0118187175809177e-1,
-            vy0=-2.0999964360980777e-1,
-            half_period=2.5256026213792353e0 / 2,
-        ),
-        "SE": OrbitIC(
-            name="SE_L2_Northern_Halo",
-            x0=1.0082893998277027,
-            z0=0.011434182696839030,
-            vy0=-0.015179690420484332,
-            half_period=2.7047531095113841 / 2,
-        ),
-    },
     "L2_Lyapunov": {
         "EM": OrbitIC(
             name="EM_L2_Lyapunov",
@@ -97,16 +81,32 @@ PRESETS: dict[str, dict[str, OrbitIC]] = {
             half_period=4.1379689311747248 / 2,
         ),
     },
-    "Dragonfly": {
+        "Northern_Butterfly": {
         "EM": OrbitIC(
-            name="EM_Dragonfly",
-            x0=1.1436327184719191e0,
-            z0=1.0109395279050720e-1,
-            vy0=-3.4052545075190177e-1,
-            half_period=6.8974361097955299e0 / 2,
+            name="EM_Northern_Butterfly",
+            x0=1.06896234204296,
+            z0=0.159599443574046,
+            vy0=-0.00769167653854165,
+            half_period=1.66142030228280,
         ),
         "SE": OrbitIC(
-            name="SE_Dragonfly",
+            name="SE_Northern_Butterfly",
+            x0=9.9478400099057562e-1,
+            z0=9.3307317319370944e-3,
+            vy0=-2.7018843432500038e-3,
+            half_period=3.6918732624381563 / 2,
+        ),
+    },
+    "Northern_Dragonfly": {
+        "EM": OrbitIC(
+            name="EM_Northern_Dragonfly",
+            x0=1.1168421589310440E+0,
+            z0=1.7419370519926658E-1,
+            vy0=-2.4694307482997110E-1,
+            half_period=5.6716693624350238E+0 / 2,
+        ),
+        "SE": OrbitIC(
+            name="SE_Northern_Dragonfly",
             x0=1.0087123143716323,
             z0=1.0173103235716078e-2,
             vy0=-1.6680589951751042e-2,
