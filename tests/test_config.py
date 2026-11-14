@@ -1,6 +1,8 @@
 import pytest
+
 from orbit_gen.setup.config import ContinuationConfig, RunConfig
 from orbit_gen.setup.presets import PRESETS
+
 
 def test_from_yaml_missing_keys_use_dataclass_defaults(tmp_path):
     path = tmp_path / "cfg.yaml"
@@ -20,6 +22,7 @@ def test_from_yaml_reads_given_keys(tmp_path):
     assert cont == ContinuationConfig(
         max_iter=7, eps=1e-9, step=-0.02, max_solutions=3, max_period_days=float("inf")
     )
+
 
 def test_from_yaml_preset_validation(tmp_path):
     path = tmp_path / "cfg.yaml"

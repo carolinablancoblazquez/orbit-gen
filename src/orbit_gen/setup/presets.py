@@ -81,7 +81,7 @@ PRESETS: dict[str, dict[str, OrbitIC]] = {
             half_period=4.1379689311747248 / 2,
         ),
     },
-        "Northern_Butterfly": {
+    "Northern_Butterfly": {
         "EM": OrbitIC(
             name="EM_Northern_Butterfly",
             x0=1.06896234204296,
@@ -122,8 +122,8 @@ PRESETS: dict[str, dict[str, OrbitIC]] = {
             half_period=6.2649639398149954e0 / 2,
         ),
     },
-    "L2_Double_Loop":{
-        "SE" : OrbitIC(
+    "L2_Double_Loop": {
+        "SE": OrbitIC(
             name="SE_L2_Double_Loop",
             x0=1.0100474443654743,
             z0=0.009248459728745469,
