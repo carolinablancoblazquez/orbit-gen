@@ -74,8 +74,8 @@ fam = Family(cfg)
 fam.save()
 ```
 
-Available preset keys (see `orbit_gen.setup.presets.PRESETS`):
-`L2_Northern_Halo`[`SE`,`EM`], `L2_Northern_Halo`[`SE`,`EM`], `L2_Southern_Halo`[`SE`,`EM`], `DRO`[`SE`,`EM`], `L2_Lyapunov`[`SE`,`EM`], `Northern_Butterfly`[`SE`,`EM`], `Northern_Dragonfly`[`SE`,`EM`], `3_1_Lunar_Resonant_Planar`[`EM`], `L2_Double_Loop`[`SE`].
+Available preset keys, and their supported systems listed in brackets (see `orbit_gen.setup.presets.PRESETS`):
+`L2_Northern_Halo`[`SE`,`EM`], `L2_Southern_Halo`[`SE`,`EM`], `DRO`[`SE`,`EM`], `L2_Lyapunov`[`SE`,`EM`], `Northern_Butterfly`[`SE`,`EM`], `Northern_Dragonfly`[`SE`,`EM`], `3_1_Lunar_Resonant_Planar`[`EM`], `L2_Double_Loop`[`SE`].
 
 ## Supported Systems
 
