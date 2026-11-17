@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "orbit-gen"
-version = "0.2.0"
+version = "1.0.0"
 description = "Periodic orbit family generation in the Circular Restricted Three-Body Problem (CR3BP)"
 readme = "README.md"
 license = "MIT"
