@@ -382,7 +382,7 @@ class Family:
         plt.show()
 
     def save(self):
-        """Save all orbit ICs, periods, and mu_star to cfg.output_path."""
+        """Save all orbit ICs, periods, mu_star and stability indices to cfg.output_path."""
         self.cfg.output_dir.mkdir(parents=True, exist_ok=True)
 
         states = np.array([o.states[0, :] for o in self.orbits])
@@ -393,6 +393,7 @@ class Family:
             states=states,
             periods=periods,
             mu_star=self.mu_star,
+            stability_indices=self.stability_indices,
         )
 
         print(f"Saved {len(self.orbits)} orbits to {self.cfg.output_path}")
@@ -404,3 +405,8 @@ class Family:
             f"ic={self.cfg.ic.name}, "
             f"orbits={len(self.orbits)})"
         )
+
+    @property
+    def stability_indices(self) -> np.ndarray:
+        """Stability indices of all orbits in the family."""
+        return np.array([o.stability_index for o in self.orbits])
