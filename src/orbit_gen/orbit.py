@@ -83,16 +83,14 @@ class Orbit:
 
     @property
     def jacobi_constant(self) -> float:
-        """Jacobi constant of the periodic orbit in canonical units."""
-        mu = self.mu_star
-        x = self.x0
-        z = self.z0
-        vy = self.vy0
+        """Jacobi constant of the orbit in canonical units."""
+        if self.states is None:
+            self.propagate()
 
-        r1 = np.sqrt((x + mu)**2 + z**2)
-        r2 = np.sqrt((x - 1 + mu)**2 + z**2)
+        pos = self.states[0, 0:3]
+        vel = self.states[0, 3:6]
 
-        return x**2 + 2 * (1 - mu) / r1 + 2 * mu / r2 - vy**2
+        return eom.jacobi_constant(pos, vel, self.mu_star)
 
     def propagate(self, monodromy: bool = False):
         """Integrate the trajectory for one full period.
