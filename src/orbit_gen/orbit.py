@@ -81,6 +81,19 @@ class Orbit:
 
         return 0.5 * (rho + 1 / rho)
 
+    @property
+    def jacobi_constant(self) -> float:
+        """Jacobi constant of the periodic orbit in canonical units."""
+        mu = self.mu_star
+        x = self.x0
+        z = self.z0
+        vy = self.vy0
+
+        r1 = np.sqrt((x + mu)**2 + z**2)
+        r2 = np.sqrt((x - 1 + mu)**2 + z**2)
+
+        return x**2 + 2 * (1 - mu) / r1 + 2 * mu / r2 - vy**2
+
     def propagate(self, monodromy: bool = False):
         """Integrate the trajectory for one full period.
 
@@ -147,7 +160,7 @@ class Orbit:
         return ax
 
     def save(self, path):
-        """Save orbit initial conditions, period and stability index to an NPZ file
+        """Save orbit initial conditions, period, stability index and Jacobi constant to an NPZ file
 
         Serializes the orbit’s defining parameters (initial state and period)
         to a NumPy `.npz` archive for later reuse or reconstruction.
@@ -167,6 +180,7 @@ class Orbit:
             period=self.period,
             mu_star=self.mu_star,
             stability_index=self.stability_index,
+            jacobi_constant=self.jacobi_constant,
         )
 
     def __repr__(self):
