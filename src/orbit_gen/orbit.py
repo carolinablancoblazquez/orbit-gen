@@ -70,6 +70,17 @@ class Orbit:
         """Full-period free variable vector [x0, z0, vy0, T]."""
         return [self.x0, self.z0, self.vy0, self.period]
 
+    @property
+    def stability_index(self) -> float:
+        """Compute the stability index of the periodic orbit."""
+        if self.monodromy is None:
+            self.propagate(monodromy=True)
+
+        eigenvalues = np.linalg.eigvals(self.monodromy)
+        rho = np.max(np.abs(eigenvalues))
+
+        return 0.5 * (rho + 1 / rho)
+
     def propagate(self, monodromy: bool = False):
         """Integrate the trajectory for one full period.
 
@@ -136,7 +147,7 @@ class Orbit:
         return ax
 
     def save(self, path):
-        """Save orbit initial conditions and period to an NPZ file
+        """Save orbit initial conditions, period and stability index to an NPZ file
 
         Serializes the orbit’s defining parameters (initial state and period)
         to a NumPy `.npz` archive for later reuse or reconstruction.
@@ -155,6 +166,7 @@ class Orbit:
             ic=self.states[0, :],
             period=self.period,
             mu_star=self.mu_star,
+            stability_index=self.stability_index,
         )
 
     def __repr__(self):
@@ -164,13 +176,3 @@ class Orbit:
             f"vy0={self.vy0:.6f}, T={self.period:.6f})"
         )
 
-@property
-def stability_index(self) -> float:
-    """Compute the stability index of the periodic orbit."""
-    if self.monodromy is None:
-        self.propagate(monodromy=True)
-
-    eigenvalues = np.linalg.eigvals(self.monodromy)
-    rho = np.max(np.abs(eigenvalues))
-
-    return 0.5 * (rho + 1 / rho)
