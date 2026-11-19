@@ -163,3 +163,14 @@ class Orbit:
             f"Orbit(x0={self.x0:.6f}, z0={self.z0:.6f}, "
             f"vy0={self.vy0:.6f}, T={self.period:.6f})"
         )
+
+@property
+def stability_index(self) -> float:
+    """Compute the stability index of the periodic orbit."""
+    if self.monodromy is None:
+        self.propagate(monodromy=True)
+
+    eigenvalues = np.linalg.eigvals(self.monodromy)
+    rho = np.max(np.abs(eigenvalues))
+
+    return 0.5 * (rho + 1 / rho)
