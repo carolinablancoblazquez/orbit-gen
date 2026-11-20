@@ -187,4 +187,3 @@ class Orbit:
             f"Orbit(x0={self.x0:.6f}, z0={self.z0:.6f}, "
             f"vy0={self.vy0:.6f}, T={self.period:.6f})"
         )
-
