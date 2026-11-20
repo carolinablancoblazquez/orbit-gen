@@ -347,6 +347,7 @@ def test_correct_orbit_later_integration_failure(mu_star, cu, ic, monkeypatch):
     assert len(calls) == 2
     assert error == np.inf
 
+
 def test_stability_index_matches_jpl(cu):
     mu_jpl = 1.215058560962404e-02
     X0 = [
@@ -367,6 +368,7 @@ def test_stability_index_matches_jpl(cu):
         rtol=1e-7,
     )
 
+
 def test_jacobi_constant_matches_jpl(cu):
     mu_jpl = 1.215058560962404e-02
     X0 = [
@@ -383,6 +385,6 @@ def test_jacobi_constant_matches_jpl(cu):
 
     np.testing.assert_allclose(
         orbit.jacobi_constant,
-        3.0247424568048298E+0,
+        3.0247424568048298e0,
         rtol=1e-6,
     )
