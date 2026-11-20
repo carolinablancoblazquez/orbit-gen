@@ -346,3 +346,43 @@ def test_correct_orbit_later_integration_failure(mu_star, cu, ic, monkeypatch):
     _, error, _ = fam._correct_orbit(X_perturbed, np.eye(6).flatten())
     assert len(calls) == 2
     assert error == np.inf
+
+def test_stability_index_matches_jpl(cu):
+    mu_jpl = 1.215058560962404e-02
+    X0 = [
+        1.111343996268567,
+        0.1933928533064504,
+        -0.22201580631068876,
+        2.789849359755705 / 2,
+    ]
+
+    fam = _make_family(mu_jpl, cu)
+    _run(fam, X0, max_solutions=1)
+
+    orbit = fam.orbits[0]
+
+    np.testing.assert_allclose(
+        orbit.stability_index,
+        12.870946871458,
+        rtol=1e-7,
+    )
+
+def test_jacobi_constant_matches_jpl(cu):
+    mu_jpl = 1.215058560962404e-02
+    X0 = [
+        1.111343996268567,
+        0.1933928533064504,
+        -0.22201580631068876,
+        2.789849359755705 / 2,
+    ]
+
+    fam = _make_family(mu_jpl, cu)
+    _run(fam, X0, max_solutions=1)
+
+    orbit = fam.orbits[0]
+
+    np.testing.assert_allclose(
+        orbit.jacobi_constant,
+        3.0247424568048298E+0,
+        rtol=1e-6,
+    )
